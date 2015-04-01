@@ -1,0 +1,123 @@
+#!/bin/bash
+
+#   pfchroot - Prepare For Chroot
+#   Copyright (C) 2015  Ramdziana Feri Yustitianto
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VERSION="0.1.0"
+EXTRAVERSION="-SNAPSHOT"
+
+if [[ $EUID != 0 &&
+      $1 != "-h" &&
+      $1 != "--help" &&
+      $1 != "-v" &&
+      $1 != "--version" ]]; then
+    echo "You must be run pfchroot as root" 2>&1
+    exit 1
+fi
+
+say_help() {
+  printf "pfchroot - Prepare For Chroot\n\n"
+  printf "usage:"
+  printf " pfchroot [OPTIONS]\n\n"
+  printf "options:\n"
+  printf "  -h, --help\t\t\tShow this message\n"
+  printf "  -v, --version\t\t\tShow the version\n"
+  printf "  -d, --dir\t\t\tCreate and set directory to be mounted\n"
+  printf "  -b, --boot \'DEVICE FILE\'\tSet boot device file\n"
+  printf "  -m, --home \'DEVICE FILE\'\tSet home device file\n"
+  printf "  -r, --root \'DEVICE FILE\'\tSet root device file\n\n"
+  printf "example:\n"
+  printf "  pfchroot --dir /mnt/mydir --root /dev/sda2 --boot /dev/sda1 --home /dev/sda3\n"
+}
+
+say_version() {
+  printf "pfchroot V$VERSION$EXTRAVERSION\nCopyright (C) 2015 Ramdziana Feri Yustitianto\n"
+}
+
+say_done() {
+  printf '\x1b[32mdone!\x1b[0m\n'
+}
+
+mount_device_file() {
+  mount $1 $2
+}
+
+while [[ $# > 1 ]]
+do
+  key=$1
+  case $key in
+      -d|--dir)
+      DIR_MNT="$2"
+      shift
+      ;;
+      -r|--root)
+      ROOT_MNT="$2"
+      shift
+      ;;
+      -m|--home)
+      HOME_MNT="$2"
+      shift
+      ;;
+      -b|--boot)
+      BOOT_MNT="$2"
+      shift
+      ;;
+      *) echo "Unknown option, please refer to \'-h\' or \'--help\'";;
+  esac
+  shift
+done
+
+if [ "$1" == "-h" -o "$1" == "--help" ]; then say_help; fi
+if [ "$1" == "-v" -o "$1" == "--version" ]; then say_version; fi
+
+if [ -n "$DIR_MNT" ]; then
+  if [ -z "$ROOT_MNT" ]; then
+    echo "Please provide, at least, root device file to be mounted"
+    exit 1
+  fi
+
+  printf "Create directory $DIR_MNT .. "
+  mkdir -p $DIR_MNT
+  say_done
+
+  printf "Mounting $ROOT_MNT to $DIR_MNT/ .. "
+  mount_device_file $ROOT_MNT $DIR_MNT
+  say_done
+
+  if [ -n "$BOOT_MNT" ]; then
+    printf "Mounting $BOOT_MNT to $DIR_MNT/boot/ .. "
+    mount_device_file $BOOT_MNT $DIR_MNT/boot
+    say_done
+  fi
+  
+  if [ -n "$HOME_MNT" ]; then
+    printf "Mounting $HOME_MNT to $DIR_MNT/home/.. "
+    mount_device_file $HOME_MNT $DIR_MNT/home
+    say_done
+  fi
+
+  printf "Mounting /proc to $DIR_MNT/proc/ .. "
+  mount -t proc proc $DIR_MNT/proc
+  say_done
+
+  printf "Mounting /sys to $DIR_MNT/sys/ .. "
+  mount --rbind /sys $DIR_MNT/sys
+  say_done
+
+  printf "Mounting /dev to $DIR_MNT/dev/ .. "
+  mount --rbind /dev $DIR_MNT/dev
+  say_done
+fi
