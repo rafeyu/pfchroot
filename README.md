@@ -2,7 +2,7 @@
 
 Doing `chroot` from my other distro again and again is boring. So .. I create this stuff to simplify `mount` actions before `chroot`ing.
 
-**Remember!** This stuff is really useful if you do `pfchroot` from your other partitions (e.g you use dual boot system with other distros). Err ... it isn't means that `pfchroot` from live cd/usb is s&#42;ck, but because you have to install it again and again through your live cd/usb, unless it is already installed.
+**Remember!** This stuff is really useful if you do `pfchroot` from your other partitions (e.g you use dual boot system with other distros). Err ... it is doesn't means that `pfchroot` from live cd/usb is s&#42;ck, but because you have to install it again and again through your live cd/usb, unless it is already installed.
 
 ## Installing
 
@@ -10,7 +10,7 @@ Download with git:
 
     $ git clone https://github.com/rafeyu/pfchroot.git
 
-Download with wget: 
+Download with wget:
 
     $ wget https://raw.githubusercontent.com/rafeyu/pfchroot/master/pfchroot
 
